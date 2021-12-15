@@ -15,10 +15,11 @@ import {
 
 import { Home } from './src/screens/Home';
 import theme from './src/styles/theme';
+import { CarDetails } from './src/screens/CarDetails';
 
 export default function App() {
 
-  const [ fontsLoaded ] = useFonts({
+  const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Archivo_400Regular,
@@ -26,13 +27,13 @@ export default function App() {
     Archivo_600SemiBold
   });
 
-  if(!fontsLoaded) {
+  if (!fontsLoaded) {
     return <AppLoading />
   }
 
   return (
-      <ThemeProvider theme={theme}>
-        <Home />
-      </ThemeProvider>
+    <ThemeProvider theme={theme}>
+      <CarDetails />
+    </ThemeProvider>
   );
 }
