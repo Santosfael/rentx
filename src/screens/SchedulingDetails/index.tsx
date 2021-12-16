@@ -1,5 +1,6 @@
 import React from 'react';
 import { RFValue } from 'react-native-responsive-fontsize';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from 'styled-components';
 import { Feather } from '@expo/vector-icons';
 
@@ -45,6 +46,12 @@ import { Button } from '../../components/Button';
 export function SchedulingDetails() {
     const theme = useTheme();
 
+    const { navigate } = useNavigation<any>();
+
+    function handleConfirmRental() {
+        navigate("SchedulingComplete");
+    }
+
     return (
         <Container>
             <Header>
@@ -76,13 +83,13 @@ export function SchedulingDetails() {
                     <Accessory name='Auto' icon={ExchangeSvg} />
                     <Accessory name='2 pessoas' icon={PeopleSvg} />
                 </Accessories>
-                
+
                 <RentalPeriod>
                     <CalendarIcon>
-                        <Feather 
+                        <Feather
                             name='calendar'
                             size={RFValue(24)}
-                            color={theme.colors.shape} 
+                            color={theme.colors.shape}
                         />
                     </CalendarIcon>
 
@@ -91,10 +98,10 @@ export function SchedulingDetails() {
                         <DateValue>18/06/2021</DateValue>
                     </DateInfo>
 
-                    <Feather 
+                    <Feather
                         name='chevron-right'
                         size={RFValue(24)}
-                        color={theme.colors.shape} 
+                        color={theme.colors.shape}
                     />
 
                     <DateInfo>
@@ -113,7 +120,7 @@ export function SchedulingDetails() {
             </Content>
 
             <Footer>
-                <Button title='Confirmar' />
+                <Button title='Alugar agora' color={theme.colors.success} onPress={handleConfirmRental} />
             </Footer>
         </Container>
     );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { ImageSlider } from '../../components/ImageSlider';
 import { BackButton } from '../../components/BackButton';
@@ -31,6 +32,11 @@ import { Button } from '../../components/Button';
 
 
 export function CarDetails() {
+    const { navigate } = useNavigation<any>();
+
+    function handleConfirmRental() {
+        navigate("Scheduling");
+    }
     return (
         <Container>
             <Header>
@@ -71,7 +77,7 @@ export function CarDetails() {
             </Content>
 
             <Footer>
-                <Button title='Confirmar' />
+                <Button title='Escolher período de aluguel' onPress={handleConfirmRental} />
             </Footer>
         </Container>
     );
