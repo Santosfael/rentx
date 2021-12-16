@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
 
+import { Car } from '../../components/Car';
+import { CarDTO } from '../../dtos/CarDTO';
+
 import Logo from '../../assets/logo.svg';
 
-import { Car } from '../../components/Car';
 
 import {
     CarList,
@@ -14,8 +16,12 @@ import {
     HeaderContent,
     TotalCars
 } from './styles';
+import { api } from '../../services/api';
+import { Load } from '../../components/Load';
 
 export function Home() {
+    const [cars, setCars] = useState<CarDTO[]>([]);
+    const [loading, setLoading] = useState(true);
     const { navigate } = useNavigation<any>();
 
     const carDataOne = {
@@ -31,6 +37,21 @@ export function Home() {
     function handleCarDetails() {
         navigate("CarDetails");
     }
+
+    useEffect(() => {
+        async function fetchCars() {
+            try {
+                const response = await api.get('/cars');
+                setCars(response.data);
+            } catch (error) {
+                console.log(error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchCars();
+    }, []);
 
     return (
         <Container>
@@ -49,11 +70,15 @@ export function Home() {
                 </HeaderContent>
             </Header>
 
-            <CarList
-                data={[1, 2, 3, 4, 5]}
-                keyExtractor={item => String(item)}
-                renderItem={({ item }) => <Car data={carDataOne} onPress={handleCarDetails} />}
-            />
+            {
+                loading ? <Load /> :
+                    <CarList
+                        data={cars}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item }) => <Car data={item} onPress={handleCarDetails} />}
+                    />
+            }
+
         </Container>
     );
 }
