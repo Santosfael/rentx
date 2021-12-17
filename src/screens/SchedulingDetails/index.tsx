@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'styled-components';
 import { Feather } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 import { ImageSlider } from '../../components/ImageSlider';
 import { BackButton } from '../../components/BackButton';
@@ -54,7 +54,8 @@ interface RentalPeriod {
 }
 
 export function SchedulingDetails() {
-    const [ rentalPeriod, setRentalPeriod ] = useState<RentalPeriod>({} as RentalPeriod);
+    const [rentalPeriod, setRentalPeriod] = useState<RentalPeriod>({} as RentalPeriod);
+    const [loading, setLoading] = useState(false);
     const theme = useTheme();
     const route = useRoute();
     const { car, dates } = route.params as Params;
@@ -64,18 +65,29 @@ export function SchedulingDetails() {
     const { navigate, goBack } = useNavigation<any>();
 
     async function handleConfirmRental() {
+        setLoading(true);
         const schedulesByCar = await api.get(`/schedules_bycars/${car.id}`);
         const unavailable_dates = [
             ...schedulesByCar.data.unavailable_dates,
             ...dates,
         ];
 
+        await api.post(`/schedules_byuser`, {
+            user_id: 1,
+            car,
+            startDate: format(getPlatformDate(parseISO(dates[0])), 'dd/MM/yyyy'),
+            endDate: format(getPlatformDate(parseISO(dates[dates.length - 1])), 'dd/MM/yyyy'),
+        })
+
         api.put(`/schedules_bycars/${car.id}`, {
             id: car.id,
             unavailable_dates
         })
-        .then(() => navigate("SchedulingComplete"))
-        .catch(() => Alert.alert('Não foi possível finalizar oseu agendamento.'));
+            .then(() => navigate("SchedulingComplete"))
+            .catch(() => {
+                setLoading(false);
+                Alert.alert('Não foi possível finalizar oseu agendamento.')
+            });
     }
 
     function handleBack() {
@@ -84,10 +96,10 @@ export function SchedulingDetails() {
 
     useEffect(() => {
         setRentalPeriod({
-            startFormatter: format(getPlatformDate(new Date(dates[0])), 'dd/MM/yyyy'),
-            endFormatter: format(getPlatformDate(new Date(dates[dates.length - 1])), 'dd/MM/yyyy'),
+            startFormatter: format(getPlatformDate(parseISO(dates[0])), 'dd/MM/yyyy'),
+            endFormatter: format(getPlatformDate(parseISO(dates[dates.length - 1])), 'dd/MM/yyyy'),
         })
-    },[])
+    }, [])
 
     return (
         <Container>
@@ -115,10 +127,10 @@ export function SchedulingDetails() {
                 <Accessories>
                     {
                         car.accessories.map((accessory) => (
-                            <Accessory 
+                            <Accessory
                                 key={accessory.type}
                                 name={accessory.name}
-                                icon={getAccessoryIcon(accessory.type)} 
+                                icon={getAccessoryIcon(accessory.type)}
                             />
                         ))
                     }
@@ -160,7 +172,13 @@ export function SchedulingDetails() {
             </Content>
 
             <Footer>
-                <Button title='Alugar agora' color={theme.colors.success} onPress={handleConfirmRental} />
+                <Button
+                    title='Alugar agora'
+                    color={theme.colors.success} onPress={handleConfirmRental}
+                    style={{ opacity: loading ? .5 : 1 }}
+                    enabled={!loading}
+                    loading={loading}
+                />
             </Footer>
         </Container>
     );

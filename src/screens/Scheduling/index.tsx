@@ -1,6 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'styled-components';
 import { format } from 'date-fns';
@@ -42,9 +41,9 @@ interface Params {
 }
 
 export function Scheduling() {
-    const [ lastSelectedDate, setLastSelectedDate ] = useState<DayProps>({} as DayProps);
-    const [ markedDates, setMarkedDates ] = useState<MarkedDateProps>({} as MarkedDateProps);
-    const [ rentalPeriod, setRentalPeriod ] = useState<RentalPeriod>({} as RentalPeriod);
+    const [lastSelectedDate, setLastSelectedDate] = useState<DayProps>({} as DayProps);
+    const [markedDates, setMarkedDates] = useState<MarkedDateProps>({} as MarkedDateProps);
+    const [rentalPeriod, setRentalPeriod] = useState<RentalPeriod>({} as RentalPeriod);
     const route = useRoute();
     const { car } = route.params as Params;
 
@@ -52,14 +51,10 @@ export function Scheduling() {
     const { navigate, goBack } = useNavigation<any>();
 
     function handleConfirmRental() {
-        if(!rentalPeriod.start || !rentalPeriod.end) {
-            Alert.alert("Selecione o intervalo para alugar.");
-        } else {
-            navigate("SchedulingDetails", {
-                car,
-                dates:Object.keys(markedDates)
-            });
-        }
+        navigate("SchedulingDetails", {
+            car,
+            dates: Object.keys(markedDates)
+        });
     }
 
     function handleBack() {
@@ -128,17 +123,17 @@ export function Scheduling() {
             </Header>
 
             <Content>
-                <Calendar 
+                <Calendar
                     markedDates={markedDates}
                     onDayPress={handleChangeDate}
                 />
             </Content>
 
             <Footer>
-                <Button 
-                    title="Confirmar" 
-                    onPress={handleConfirmRental} 
-                    color={(!!rentalPeriod.start && !!rentalPeriod.end) ? '' : theme.colors.main_light}
+                <Button
+                    title="Confirmar"
+                    onPress={handleConfirmRental}
+                    style={{ opacity: (!!rentalPeriod.start && !!rentalPeriod.end) ? 1 : 0.5 }}
                     enabled={(!!rentalPeriod.start && !!rentalPeriod.end) ? true : false}
                 />
             </Footer>
