@@ -1,11 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useState } from 'react';
+import { Alert } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from 'styled-components';
-import { useNavigation } from '@react-navigation/native';
+import { format } from 'date-fns';
 
 import { BackButton } from '../../components/BackButton';
-import { Calendar } from '../../components/Calendar';
+import {
+    Calendar,
+    DayProps,
+    generateInterval,
+    MarkedDateProps
+} from '../../components/Calendar';
 import { Button } from '../../components/Button';
+import { getPlatformDate } from '../../utils/getPlatformDate';
+import { CarDTO } from '../../dtos/CarDTO';
 
 import ArrowSvg from '../../assets/arrow.svg';
 
@@ -21,13 +30,63 @@ import {
     Footer,
 } from './styles';
 
-export function Scheduling() {
-    const theme = useTheme();
+interface RentalPeriod {
+    start: number;
+    startFormatter: string;
+    end: number;
+    endFormatter: string;
+}
 
-    const { navigate } = useNavigation<any>();
+interface Params {
+    car: CarDTO;
+}
+
+export function Scheduling() {
+    const [ lastSelectedDate, setLastSelectedDate ] = useState<DayProps>({} as DayProps);
+    const [ markedDates, setMarkedDates ] = useState<MarkedDateProps>({} as MarkedDateProps);
+    const [ rentalPeriod, setRentalPeriod ] = useState<RentalPeriod>({} as RentalPeriod);
+    const route = useRoute();
+    const { car } = route.params as Params;
+
+    const theme = useTheme();
+    const { navigate, goBack } = useNavigation<any>();
 
     function handleConfirmRental() {
-        navigate("SchedulingDetails");
+        if(!rentalPeriod.start || !rentalPeriod.end) {
+            Alert.alert("Selecione o intervalo para alugar.");
+        } else {
+            navigate("SchedulingDetails", {
+                car,
+                dates:Object.keys(markedDates)
+            });
+        }
+    }
+
+    function handleBack() {
+        goBack();
+    }
+
+    function handleChangeDate(date: DayProps) {
+        let start = !lastSelectedDate.timestamp ? date : lastSelectedDate;
+        let end = date;
+
+        if (start.timestamp > end.timestamp) {
+            start = end;
+            end = start;
+        }
+
+        setLastSelectedDate(end);
+        const interval = generateInterval(start, end);
+        setMarkedDates(interval);
+
+        const firstDate = Object.keys(interval)[0];
+        const endDate = Object.keys(interval)[Object.keys(interval).length - 1];
+        setRentalPeriod({
+            start: start.timestamp,
+            startFormatter: format(getPlatformDate(new Date(firstDate)), 'dd/MM/yyyy'),
+            end: end.timestamp,
+            endFormatter: format(getPlatformDate(new Date(endDate)), 'dd/MM/yyyy')
+        })
     }
 
     return (
@@ -36,7 +95,7 @@ export function Scheduling() {
                 style='light'
             />
             <Header>
-                <BackButton onPress={() => { }}
+                <BackButton onPress={handleBack}
                     color={theme.colors.shape}
                     style={{
                         width: 24,
@@ -52,24 +111,36 @@ export function Scheduling() {
                 <RentalPeriod>
                     <DateInfo>
                         <DateTitle>DE</DateTitle>
-                        <DateValue selected={false}>18/06/2021</DateValue>
+                        <DateValue selected={!!rentalPeriod.startFormatter}>
+                            {rentalPeriod.startFormatter}
+                        </DateValue>
                     </DateInfo>
 
                     <ArrowSvg />
 
                     <DateInfo>
                         <DateTitle>ATÉ</DateTitle>
-                        <DateValue selected={false}>18/06/2021</DateValue>
+                        <DateValue selected={!!rentalPeriod.endFormatter}>
+                            {rentalPeriod.endFormatter}
+                        </DateValue>
                     </DateInfo>
                 </RentalPeriod>
             </Header>
 
             <Content>
-                <Calendar />
+                <Calendar 
+                    markedDates={markedDates}
+                    onDayPress={handleChangeDate}
+                />
             </Content>
 
             <Footer>
-                <Button title="Confirmar" onPress={handleConfirmRental} />
+                <Button 
+                    title="Confirmar" 
+                    onPress={handleConfirmRental} 
+                    color={(!!rentalPeriod.start && !!rentalPeriod.end) ? '' : theme.colors.main_light}
+                    enabled={(!!rentalPeriod.start && !!rentalPeriod.end) ? true : false}
+                />
             </Footer>
         </Container>
     );
