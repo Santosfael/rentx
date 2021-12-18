@@ -1,5 +1,15 @@
 import React from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { getStatusBarHeight } from 'react-native-iphone-x-helper';
+import { useTheme } from 'styled-components';
+import { StatusBar } from 'expo-status-bar';
+import Animated, {
+    Extrapolate,
+    interpolate,
+    useAnimatedScrollHandler,
+    useAnimatedStyle,
+    useSharedValue
+} from 'react-native-reanimated';
 
 import { ImageSlider } from '../../components/ImageSlider';
 import { BackButton } from '../../components/BackButton';
@@ -26,6 +36,7 @@ import {
     Footer
 } from './styles';
 
+
 interface Params {
     car: CarDTO;
 }
@@ -34,6 +45,34 @@ export function CarDetails() {
     const { navigate, goBack } = useNavigation<any>();
     const route = useRoute();
     const { car } = route.params as Params;
+    const theme = useTheme();
+
+    const scrollY = useSharedValue(0);
+    const scrollHandler = useAnimatedScrollHandler(event => {
+        scrollY.value = event.contentOffset.y;
+    });
+
+    const headerStyleAnimation = useAnimatedStyle(() => {
+        return {
+            height: interpolate(
+                scrollY.value,
+                [0, 200],
+                [200, 70],
+                Extrapolate.CLAMP
+            ),
+        }
+    });
+
+    const sliderCarsStyleAnimation = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(
+                scrollY.value,
+                [0, 150],
+                [1, 0],
+                Extrapolate.CLAMP
+            )
+        }
+    })
 
     function handleConfirmRental() {
         navigate("Scheduling", {car});
@@ -44,15 +83,32 @@ export function CarDetails() {
     }
     return (
         <Container>
-            <Header>
-                <BackButton onPress={handleBack} />
+            <StatusBar style='dark' />
+            <Animated.View
+                style={[headerStyleAnimation, {backgroundColor: theme.colors.background_secondary}]}
+            >
+                <Header>
+                    <BackButton onPress={handleBack} />
 
-            </Header>
-            <CarImages>
-                <ImageSlider imagesUrl={car.photos} />
-            </CarImages>
+                </Header>
+                <Animated.View
+                    style={sliderCarsStyleAnimation}
+                >
+                    <CarImages>
+                        <ImageSlider imagesUrl={car.photos} />
+                    </CarImages>
+                </Animated.View>
+            </Animated.View>
 
-            <Content>
+            <Animated.ScrollView
+                contentContainerStyle={{
+                    paddingHorizontal: 24,
+                    alignItems: 'center'
+                }}
+                showsHorizontalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
+            >
                 <Details>
                     <Description>
                         <Brand>{car.brand}</Brand>
@@ -79,11 +135,12 @@ export function CarDetails() {
                 </Accessories>
 
                 <About>
-                    Este é um automóvel desportivo. Surgiu do lendário touro de lide
-                    indultado na praça real Maestranza e Sevilla. É um belíssimo carro
-                    para quem gosta de acelerar
+                    {car.about}
+                    {car.about}
+                    {car.about}
+                    {car.about}
                 </About>
-            </Content>
+            </Animated.ScrollView>
 
             <Footer>
                 <Button title='Escolher período de aluguel' onPress={handleConfirmRental} />
