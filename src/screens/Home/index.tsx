@@ -26,7 +26,7 @@ import {
     TotalCars,
 } from './styles';
 import { api } from '../../services/api';
-import { Load } from '../../components/Load';
+import { LoadAnimation } from '../../components/LoadAnimation';
 
 const ButtonAnimated = Animated.createAnimatedComponent(RectButton);
 
@@ -114,7 +114,7 @@ export function Home() {
             </Header>
 
             {
-                loading ? <Load /> :
+                loading ? <LoadAnimation /> :
                     <CarList
                         data={cars}
                         keyExtractor={item => item.id}
