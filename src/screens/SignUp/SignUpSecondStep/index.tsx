@@ -62,8 +62,7 @@ export function SignUpSecondStep(){
                 message: `Agora é só fazer login\ne aproveitar`
             });
         })
-        .catch((error) => {
-            console.log(error)
+        .catch(() => {
             Alert.alert('Opa', 'Não foi possível cadastrar');
         });
 
