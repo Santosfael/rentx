@@ -1,8 +1,9 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { useWindowDimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
+import { ConfirmButtom } from '../../components/ConfirmButtom';
 import LogoSvg from '../../assets/logo_background_gray.svg';
 import DoneSvg from '../../assets/done.svg';
 
@@ -13,14 +14,21 @@ import {
     Message,
     Footer,
 } from './styles';
-import { ConfirmButtom } from '../../components/ConfirmButtom';
 
-export function SchedulingComplete() {
+interface Params {
+    title: string;
+    message: string;
+    nextScreenRoute: string;
+}
+
+export function Confirmation() {
     const { width } = useWindowDimensions();
     const { navigate } = useNavigation<any>();
+    const route = useRoute();
+    const {title, message, nextScreenRoute} = route.params as Params;
 
     function handleConfirm() {
-        navigate("Home");
+        navigate(nextScreenRoute);
     }
     return (
         <Container>
@@ -31,12 +39,10 @@ export function SchedulingComplete() {
 
             <Content>
                 <DoneSvg width={80} height={80} />
-                <Title>Carro alugado!</Title>
+                <Title>{title}</Title>
 
                 <Message>
-                    Agora você só precisa ir{'\n'}
-                    até a concessionária da RENTX{'\n'}
-                    pegar o seu automóvel
+                   {message}
                 </Message>
             </Content>
 

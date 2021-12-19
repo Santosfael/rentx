@@ -8,6 +8,7 @@ interface Props {
 
 export const Container = styled.View`
     flex-direction: row;
+    margin-bottom: 8px;
     width: 100%;
 `;
 export const IconContainer = styled.View<Props>`
