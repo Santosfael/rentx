@@ -3,10 +3,11 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Alert, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from 'styled-components';
 
+import { PasswordInput } from '../../../components/PasswordInput';
 import { BackButton } from '../../../components/BackButton';
 import { Bullet } from '../../../components/Bullet';
 import { Button } from '../../../components/Button';
-import { PasswordInput } from '../../../components/PasswordInput';
+import { api } from '../../../services/api';
 
 import {
     Container,
@@ -22,7 +23,7 @@ interface Params {
     user: {
         name: string;
         email: string;
-        driverlicense: string;
+        driverLicense: string;
     };
 }
 
@@ -39,7 +40,7 @@ export function SignUpSecondStep(){
     function handleBack() {
         goBack();
     }
-    function handleRegister() {
+    async function handleRegister() {
         if(!password || !passwordConfirm) {
             Alert.alert('Campo de senha ou confirmação inválidos!');
         }
@@ -48,11 +49,24 @@ export function SignUpSecondStep(){
             Alert.alert('As senhas não conferem');
         }
 
-        navigate('Confirmation', {
-            nextScreenRoute: 'SignIn',
-            title: 'Conta Criada!',
-            message: `Agora é só fazer login\ne aproveitar`
+        await api.post('/users', {
+            name: user.name,
+            email: user.email,
+            driver_license: user.driverLicense,
+            password
         })
+        .then(() =>{
+            navigate('Confirmation', {
+                nextScreenRoute: 'SignIn',
+                title: 'Conta Criada!',
+                message: `Agora é só fazer login\ne aproveitar`
+            });
+        })
+        .catch((error) => {
+            console.log(error)
+            Alert.alert('Opa', 'Não foi possível cadastrar');
+        });
+
     }
 
     return (
