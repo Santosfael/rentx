@@ -14,7 +14,7 @@ import {
 } from '@expo-google-fonts/archivo';
 
 import theme from './src/styles/theme';
-import { Routes } from './src/screens/routes';
+import { Routes } from './src/routes';
 
 export default function App() {
 
