@@ -107,6 +107,8 @@ export function SignUpFirstStep(){
                     <Button 
                         title='Próximo'
                         onPress={handleNextStep}
+                        style={{ opacity: (!!name && !!email && !!driverLicense) ? 1 : 0.5 }}
+                        enabled={(!!name && !!email && !!driverLicense) ? true : false}
                     />
                 </Container>
             </TouchableWithoutFeedback>

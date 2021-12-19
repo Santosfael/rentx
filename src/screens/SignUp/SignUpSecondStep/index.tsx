@@ -101,6 +101,8 @@ export function SignUpSecondStep(){
                         title='Cadastrar'
                         color={theme.colors.success}
                         onPress={handleRegister}
+                        style={{ opacity: (!!password && !!passwordConfirm) ? 1 : 0.5 }}
+                        enabled={(!!password && !!passwordConfirm) ? true : false}
                     />
                 </Container>
             </TouchableWithoutFeedback>

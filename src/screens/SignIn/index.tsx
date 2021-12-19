@@ -89,16 +89,15 @@ export function SignIn(){
                         <Button 
                             title='Login'
                             onPress={handleSignIn}
-                            style={{ opacity: true ? .5 : 1 }}
-                            enabled={false}
-                            loading={false}
+                            style={{ opacity: (!!email && !!password) ? 1 : 0.5 }}
+                            enabled={(!!email && !!password) ? true : false}
                         />
 
                         <Button 
                             title='Criar conta gratuita'
                             color={theme.colors.background_secondary}
-                            ligth
                             onPress={handleNewAccount}
+                            ligth
                         />
                     </Footer>
                 </Container>
