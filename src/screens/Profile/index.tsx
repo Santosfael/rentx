@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../../components/BackButton';
+import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from 'styled-components';
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+import * as Yup from 'yup';
 
 import { PasswordInput } from '../../components/PasswordInput';
+import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { useAuth } from '../../hooks/auth';
+
 import {
     Container,
     Header,
@@ -35,7 +38,7 @@ interface ImageProps {
 }
 
 export function Profile() {
-    const { user } = useAuth();
+    const { user, signOut, updatedUser } = useAuth();
     const [option, setOption] = useState<'dataEdit' | 'passwordEdit'>('dataEdit');
     const [avatar, setAvatar] = useState(user.avatar);
     const [name, setName] = useState(user.name);
@@ -48,8 +51,22 @@ export function Profile() {
         goBack();
     }
 
-    function handleSignOut() {
-
+    async function handleSignOut() {
+        Alert.alert(
+            'Tem certeza?',
+            'Se você sair, irá precisar de internet para conectar-se novamente.',
+            [
+                {
+                    text: 'Cancelar',
+                    onPress: () => { },
+                    style: 'cancel'
+                },
+                {
+                    text: 'Sim',
+                    onPress: () => signOut()
+                }
+            ]
+        )
     }
 
     function handleOptionChange(optionSelected: 'dataEdit' | 'passwordEdit') {
@@ -64,10 +81,41 @@ export function Profile() {
             quality: 1,
         }) as ImageProps;
 
-        console.log(result);
-
         if (!result.cancelled) {
             setAvatar(result.uri);
+        }
+    }
+
+    async function handleProfileUpdate() {
+        try {
+            const schema = Yup.object().shape({
+                driverLicense: Yup.string()
+                    .required('CNH é obrigatoria')
+                    .min(11, 'A CNH tem no mínimo 11 caracteres')
+                    .max(11, 'A CNH tem no máximo 11 caracteres'),
+                name: Yup.string()
+                    .required('Nome é obrigatorio')
+            });
+
+            const data = { name, driverLicense };
+            await schema.validate(data);
+
+            await updatedUser({
+                id: user.id,
+                user_id: user.user_id,
+                email: user.email,
+                name,
+                driver_license: driverLicense,
+                avatar,
+                token: user.token
+            });
+
+            Alert.alert('Perfil atualizado!');
+        } catch (error) {
+            if (error instanceof Yup.ValidationError)
+                Alert.alert('Opá', error.message);
+            else
+                Alert.alert('Não foi possível atualizar o perfil');
         }
     }
 
@@ -162,6 +210,10 @@ export function Profile() {
                                     />
                                 </Section>
                         }
+                        <Button
+                            title='Salvar alterações'
+                            onPress={handleProfileUpdate}
+                        />
                     </Content>
                 </Container>
             </TouchableWithoutFeedback>
