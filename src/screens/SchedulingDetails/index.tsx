@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { RFValue } from 'react-native-responsive-fontsize';
+import { Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { useTheme } from 'styled-components';
 import { Feather } from '@expo/vector-icons';
-import { Alert } from 'react-native';
 import { format, parseISO } from 'date-fns';
 
 import { ImageSlider } from '../../components/ImageSlider';
@@ -55,43 +56,37 @@ interface RentalPeriod {
 
 export function SchedulingDetails() {
     const [rentalPeriod, setRentalPeriod] = useState<RentalPeriod>({} as RentalPeriod);
+    const [carUpdated, setCarUpdated] = useState<CarDTO>({} as CarDTO);
+
+    const netInfo = useNetInfo();
     const [loading, setLoading] = useState(false);
     const theme = useTheme();
     const route = useRoute();
     const { car, dates } = route.params as Params;
 
-    const rentalTotal = Number(dates.length * car.rent.price);
+    const rentalTotal = Number(dates.length * car.price);
 
     const { navigate, goBack } = useNavigation<any>();
 
     async function handleConfirmRental() {
         setLoading(true);
-        const schedulesByCar = await api.get(`/schedules_bycars/${car.id}`);
-        const unavailable_dates = [
-            ...schedulesByCar.data.unavailable_dates,
-            ...dates,
-        ];
 
-        await api.post(`/schedules_byuser`, {
+
+        await api.post(`/rentals`, {
             user_id: 1,
-            car,
-            startDate: format(getPlatformDate(parseISO(dates[0])), 'dd/MM/yyyy'),
-            endDate: format(getPlatformDate(parseISO(dates[dates.length - 1])), 'dd/MM/yyyy'),
-        })
-
-        api.put(`/schedules_bycars/${car.id}`, {
-            id: car.id,
-            unavailable_dates
-        })
-            .then(() => navigate("Confirmation", {
-                nextScreenRoute: 'Home',
-                title: 'Carro Alugado!',
-                message: `Agora vc só precisa ir\naté a concessionária da RENTX\npegar o seu automóvel.`
-            }))
-            .catch(() => {
-                setLoading(false);
-                Alert.alert('Não foi possível finalizar o seu agendamento.')
-            });
+            car_id: car.id,
+            start_date: new Date(dates[0]),
+            end_date: new Date(dates[dates.length - 1]),
+            total: rentalTotal
+        }).then(() => navigate("Confirmation", {
+            nextScreenRoute: 'Home',
+            title: 'Carro Alugado!',
+            message: `Agora vc só precisa ir\naté a concessionária da RENTX\npegar o seu automóvel.`
+        }))
+        .catch(() => {
+            setLoading(false);
+            Alert.alert('Não foi possível finalizar o seu agendamento.')
+        });
     }
 
     function handleBack() {
@@ -103,7 +98,18 @@ export function SchedulingDetails() {
             startFormatter: format(getPlatformDate(parseISO(dates[0])), 'dd/MM/yyyy'),
             endFormatter: format(getPlatformDate(parseISO(dates[dates.length - 1])), 'dd/MM/yyyy'),
         })
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        async function fetchCarUpdated() {
+            const response = await api.get(`/cars/${car.id}`);
+            setCarUpdated(response.data);
+        }
+
+        if (netInfo.isConnected === true) {
+            fetchCarUpdated();
+        }
+    }, [netInfo.isConnected]);
 
     return (
         <Container>
@@ -112,7 +118,12 @@ export function SchedulingDetails() {
 
             </Header>
             <CarImages>
-                <ImageSlider imagesUrl={car.photos} />
+                <ImageSlider
+                    imagesUrl={
+                        !!carUpdated.photos ?
+                            carUpdated.photos : [{ id: car.thumbnail, photo: car.thumbnail }]
+                    }
+                />
             </CarImages>
 
             <Content>
@@ -123,22 +134,26 @@ export function SchedulingDetails() {
                     </Description>
 
                     <Rent>
-                        <Period>{car.rent.period}</Period>
-                        <Price>R$ {car.rent.price}</Price>
+                        <Period>{car.period}</Period>
+                        <Price>R$ {car.price}</Price>
                     </Rent>
                 </Details>
 
-                <Accessories>
-                    {
-                        car.accessories.map((accessory) => (
-                            <Accessory
-                                key={accessory.type}
-                                name={accessory.name}
-                                icon={getAccessoryIcon(accessory.type)}
-                            />
-                        ))
-                    }
-                </Accessories>
+                {
+                    carUpdated.accessories &&
+                    <Accessories>
+                        {
+                            carUpdated.accessories.map(accessory => (
+                                <Accessory
+                                    key={accessory.type}
+                                    name={accessory.name}
+                                    icon={getAccessoryIcon(accessory.type)}
+                                />
+                            ))
+                        }
+
+                    </Accessories>
+                }
 
                 <RentalPeriod>
                     <CalendarIcon>
@@ -169,7 +184,7 @@ export function SchedulingDetails() {
                 <RentalPrice>
                     <RentalPriceLabel>TOTAL</RentalPriceLabel>
                     <RentalPriceDetails>
-                        <RentalPriceQuota>{`R$ ${car.rent.price} x${dates.length} diárias`}</RentalPriceQuota>
+                        <RentalPriceQuota>{`R$ ${car.price} x${dates.length} diárias`}</RentalPriceQuota>
                         <RentalPriceTotal>R$ {rentalTotal}</RentalPriceTotal>
                     </RentalPriceDetails>
                 </RentalPrice>

@@ -81,7 +81,6 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
 
     async function updatedUser(user: User) {
-        console.log(user);
         try {
             const userCollection = database.get<ModelUser>('users');
             await database.write(async () => {
