@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import { useTheme } from 'styled-components';
@@ -9,7 +9,6 @@ import * as Yup from 'yup';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { PasswordInput } from '../../components/PasswordInput';
-import { database } from '../../database';
 import { useAuth } from '../../hooks/auth';
 
 import {
@@ -56,16 +55,6 @@ export function SignIn() {
     function handleNewAccount() {
         navigate("SignUpFirstStep")
     }
-
-    useEffect(() => {
-        async function loadData() {
-            const usersCollection = database.get('users');
-            const users = await usersCollection.query().fetch();
-
-            console.log(users);
-        }
-        loadData();
-    }, [])
 
     return (
         <KeyboardAvoidingView
