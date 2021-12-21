@@ -23,6 +23,7 @@ interface AuthContexData {
     signIn: (credentials: SignInCrententials) => Promise<void>;
     signOut: () => Promise<void>;
     updatedUser: (user: User) => Promise<void>;
+    loading: boolean;
 }
 
 interface AuthProviderProps {
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContexData>({} as AuthContexData);
 
 function AuthProvider({ children }: AuthProviderProps) {
     const [data, setData] = useState<User>({} as User);
+    const [loading, setLoading] = useState(true);
 
     async function signIn({ email, password }: SignInCrententials) {
         try {
@@ -47,17 +49,16 @@ function AuthProvider({ children }: AuthProviderProps) {
             const userCollection = database.get<ModelUser>('users');
             await database.write(async () => {
                 await userCollection.create((newUser) => {
-                    newUser.id = user.id,
+                    newUser.user_id = user.id,
                         newUser.name = user.name,
                         newUser.email = user.email,
                         newUser.driver_license = user.driver_license,
                         newUser.avatar = user.avatar,
                         newUser.token = token
                 })
-            }
-
-            )
+            });
             setData({ ...user, token });
+
 
         } catch (error) {
             throw new Error(error);
@@ -80,6 +81,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
 
     async function updatedUser(user: User) {
+        console.log(user);
         try {
             const userCollection = database.get<ModelUser>('users');
             await database.write(async () => {
@@ -106,10 +108,12 @@ function AuthProvider({ children }: AuthProviderProps) {
                 const userData = response[0]._raw as unknown as User;
                 api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
                 setData(userData);
+                setLoading(false);
             }
         }
 
         loadUserData();
+        setLoading(false);
     }, [])
 
     return (
@@ -117,7 +121,8 @@ function AuthProvider({ children }: AuthProviderProps) {
             user: data,
             signIn,
             signOut,
-            updatedUser
+            updatedUser,
+            loading
         }}>
             {children}
         </AuthContext.Provider>

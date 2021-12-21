@@ -94,7 +94,7 @@ export function Profile() {
                     .min(11, 'A CNH tem no mínimo 11 caracteres')
                     .max(11, 'A CNH tem no máximo 11 caracteres'),
                 name: Yup.string()
-                    .required('Nome é obrigatorio')
+                    .required('Nome é obrigatório')
             });
 
             const data = { name, driverLicense };
@@ -112,10 +112,12 @@ export function Profile() {
 
             Alert.alert('Perfil atualizado!');
         } catch (error) {
+
             if (error instanceof Yup.ValidationError)
                 Alert.alert('Opá', error.message);
-            else
+            else {
                 Alert.alert('Não foi possível atualizar o perfil');
+            }
         }
     }
 
