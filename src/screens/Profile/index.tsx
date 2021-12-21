@@ -28,6 +28,7 @@ import {
     OptionTitle,
     Section
 } from './styles';
+import { useNetInfo } from '@react-native-community/netinfo';
 
 interface ImageProps {
     cancelled: boolean;
@@ -40,6 +41,8 @@ interface ImageProps {
 export function Profile() {
     const { user, signOut, updatedUser } = useAuth();
     const [option, setOption] = useState<'dataEdit' | 'passwordEdit'>('dataEdit');
+    const netInfo = useNetInfo();
+
     const [avatar, setAvatar] = useState(user.avatar);
     const [name, setName] = useState(user.name);
     const [driverLicense, setDriverLicense] = useState(user.driver_license);
@@ -70,6 +73,9 @@ export function Profile() {
     }
 
     function handleOptionChange(optionSelected: 'dataEdit' | 'passwordEdit') {
+        if (netInfo.isConnected === false && optionSelected === 'passwordEdit') {
+            Alert.alert('Você está offline', 'Para mudar a senha, conecte-se a Internet');
+        }
         setOption(optionSelected);
     }
 
