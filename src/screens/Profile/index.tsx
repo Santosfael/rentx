@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../../components/BackButton';
 import { useTheme } from 'styled-components';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 import { PasswordInput } from '../../components/PasswordInput';
 import { Input } from '../../components/Input';
@@ -25,10 +26,21 @@ import {
     Section
 } from './styles';
 
-export function Profile(){
-    const [ option, setOption ] = useState<'dataEdit' | 'passwordEdit'>('dataEdit');
+interface ImageProps {
+    cancelled: boolean;
+    height: number;
+    type: string;
+    uri: string;
+    width: number;
+}
 
+export function Profile() {
     const { user } = useAuth();
+    const [option, setOption] = useState<'dataEdit' | 'passwordEdit'>('dataEdit');
+    const [avatar, setAvatar] = useState(user.avatar);
+    const [name, setName] = useState(user.name);
+    const [driverLicense, setDriverLicense] = useState(user.driver_license);
+
     const theme = useTheme();
     const { goBack } = useNavigation();
 
@@ -40,8 +52,23 @@ export function Profile(){
 
     }
 
-    function handleOptionChange(optionSelected: 'dataEdit' | 'passwordEdit'){
+    function handleOptionChange(optionSelected: 'dataEdit' | 'passwordEdit') {
         setOption(optionSelected);
+    }
+
+    async function handleAvatarSelect() {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 4],
+            quality: 1,
+        }) as ImageProps;
+
+        console.log(result);
+
+        if (!result.cancelled) {
+            setAvatar(result.uri);
+        }
     }
 
     return (
@@ -60,9 +87,9 @@ export function Profile(){
                             </LogoutButton>
                         </HeaderTop>
                         <PhotoContainer>
-                            <Photo source={{uri: 'https://github.com/santosfael.png'}} />
-                            <PhotoButton onPress={() => {}}>
-                                <Feather 
+                            {!!avatar && <Photo source={{ uri: avatar }} />}
+                            <PhotoButton onPress={handleAvatarSelect}>
+                                <Feather
                                     name='camera'
                                     size={24}
                                     color={theme.colors.shape}
@@ -71,9 +98,9 @@ export function Profile(){
                         </PhotoContainer>
                     </Header>
 
-                    <Content style={{marginBottom: useBottomTabBarHeight()}}>
+                    <Content style={{ marginBottom: useBottomTabBarHeight() }}>
                         <Options>
-                            <Option 
+                            <Option
                                 active={option === 'dataEdit'}
                                 onPress={() => handleOptionChange('dataEdit')}
                             >
@@ -82,7 +109,7 @@ export function Profile(){
                                 </OptionTitle>
                             </Option>
 
-                            <Option 
+                            <Option
                                 active={option === 'passwordEdit'}
                                 onPress={() => handleOptionChange('passwordEdit')}
                             >
@@ -92,46 +119,48 @@ export function Profile(){
                             </Option>
                         </Options>
                         {
-                            option === 'dataEdit' 
-                            ?
-                            <Section>
-                                <Input 
-                                    iconName='user'
-                                    placeholder='Nome'
-                                    autoCorrect={false}
-                                    defaultValue={user.name}
-                                />
+                            option === 'dataEdit'
+                                ?
+                                <Section>
+                                    <Input
+                                        iconName='user'
+                                        placeholder='Nome'
+                                        autoCorrect={false}
+                                        defaultValue={user.name}
+                                        onChangeText={setName}
+                                    />
 
-                                <Input 
-                                    iconName='mail'
-                                    editable={false}
-                                    defaultValue={user.email}
-                                />
+                                    <Input
+                                        iconName='mail'
+                                        editable={false}
+                                        defaultValue={user.email}
+                                    />
 
-                                <Input 
-                                    iconName='credit-card'
-                                    placeholder='CNH'
-                                    keyboardType='numeric'
-                                    defaultValue={user.driver_license}
-                                />
-                            </Section>
-                            :
-                            <Section>
-                                <PasswordInput 
-                                    iconName='lock'
-                                    placeholder='Senha atual'
-                                />
+                                    <Input
+                                        iconName='credit-card'
+                                        placeholder='CNH'
+                                        keyboardType='numeric'
+                                        defaultValue={user.driver_license}
+                                        onChangeText={setDriverLicense}
+                                    />
+                                </Section>
+                                :
+                                <Section>
+                                    <PasswordInput
+                                        iconName='lock'
+                                        placeholder='Senha atual'
+                                    />
 
-                                <PasswordInput 
-                                    iconName='lock'
-                                    placeholder='Nova senha'
-                                />
+                                    <PasswordInput
+                                        iconName='lock'
+                                        placeholder='Nova senha'
+                                    />
 
-                                <PasswordInput 
-                                    iconName='lock'
-                                    placeholder='Repetir senha'
-                                />
-                            </Section>
+                                    <PasswordInput
+                                        iconName='lock'
+                                        placeholder='Repetir senha'
+                                    />
+                                </Section>
                         }
                     </Content>
                 </Container>
