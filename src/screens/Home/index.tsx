@@ -27,10 +27,10 @@ export function Home() {
     const [loading, setLoading] = useState(true);
 
     const netInfo = useNetInfo();
-    const { navigate } = useNavigation<any>();
+    const navigation = useNavigation<any>();
 
     function handleCarDetails(car: ModelCar) {
-        navigate("CarDetails", { car });
+        navigation.navigate("CarDetails", { car });
     }
 
     async function offlineSynchronize() {
